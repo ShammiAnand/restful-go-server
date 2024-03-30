@@ -10,7 +10,18 @@ import (
 	"gorm.io/gorm"
 )
 
-func database() (*gorm.DB, error) {
+// type GormDB struct {
+// 	DB *gorm.DB
+// }
+
+// func (d *gorm.DB) Init() {
+// 	d.DB, err := Database()
+// 	if err != nil {
+// 		log.Fatal("failed to initialise db")
+// 	}
+// }
+
+func Database() (*gorm.DB, error) {
 
 	loadEnvError := godotenv.Load(".env")
 	if loadEnvError != nil {

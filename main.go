@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,18 +12,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type userParams struct {
-	Name     string  `json:"name"`
-	Email    *string `json:"email"`
-	JobTitle string  `json:"job_title"`
-	Age      uint8   `json:"age"`
-}
-
-type message struct {
-	Message string `json:"message"`
-}
-
 func main() {
+
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal("cannot load env")
@@ -33,8 +22,12 @@ func main() {
 	if portString == "" {
 		log.Fatal("PORT is not found in environment")
 	}
+
 	fmt.Println("starting at PORT:", portString)
-	serverError := http.ListenAndServe(":"+portString, mainRouter())
+
+	addr := fmt.Sprintf(":%v", portString)
+	serverError := http.ListenAndServe(addr, mainRouter())
+
 	if serverError != nil {
 		log.Fatal(serverError)
 	}
@@ -44,7 +37,7 @@ func mainRouter() http.Handler {
 
 	router := chi.NewRouter()
 
-	db, err := database()
+	_, err := Database()
 	if err != nil {
 		log.Fatal("couldn't connect to DB")
 	}
@@ -62,51 +55,22 @@ func mainRouter() http.Handler {
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
-	// NOTE: Public Routes
+	// Public Routes
 	router.Group(func(r chi.Router) {
+
 		router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			respondWithJson(w, 200, message{
-				Message: "Welcome to Shammi's HTTP server; use GET /info for more info",
+			respondWithJson(w, 200, Message{
+				Message: "Welcome to a simple HTTP server; use GET /info for more info",
 			},
 			)
 		})
-		router.Post("/users", func(w http.ResponseWriter, r *http.Request) {
 
-			decoder := json.NewDecoder(r.Body)
-			payload := userParams{}
-			err := decoder.Decode(&payload)
-			if err != nil {
-				respondWithError(w, 403, fmt.Sprintf("Error Parsing JSON: %v", err))
-			}
+		router.Post("/users", CreateUserHandler)
+		router.Get("/users", GetUsersHandler)
+		router.Get("/users/{id}", GetUserWithIdHandler)
+		router.Delete("/users/{id}", DeleteUserWithIdHandler)
 
-			newUser := User{
-				Name:     payload.Name,
-				Age:      payload.Age,
-				Email:    payload.Email,
-				JobTitle: payload.JobTitle,
-			}
-
-			result := db.Create(&newUser)
-
-			if result.Error != nil {
-				respondWithError(w, 403, fmt.Sprintf("failed to create: %v", result.Error))
-			}
-
-			respondWithJson(w, 201, newUser)
-
-		})
 	})
-
-	// NOTE: Private Routes
-	// Require Authentication
-	// r.Group(func(r chi.Router) {
-	// 	r.Use(AuthMiddleware)
-	// 	r.Post("/manage", CreateAsset)
-	// })
-
-	// NOTE: v1APIRouter
-	// v1APIRouter := chi.NewRouter()
-	// router.Mount("/v1/api", v1APIRouter)
 
 	return router
 }
