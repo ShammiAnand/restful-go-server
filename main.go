@@ -33,11 +33,17 @@ func main() {
 
 	addr := fmt.Sprintf(":%v", portString)
 	r := mainRouter()
-	serverError := http.ListenAndServe(addr, logging(r))
 
+	server := http.Server{
+		Addr:    addr,
+		Handler: logging(r),
+	}
+
+	serverError := server.ListenAndServe()
 	if serverError != nil {
 		log.Fatal(serverError)
 	}
+
 }
 
 func mainRouter() http.Handler {
