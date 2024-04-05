@@ -10,11 +10,37 @@ import (
 	"github.com/joho/godotenv"
 )
 
+type wrappedWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+type Middleware func(http.Handler) http.Handler
+
+func CreateStack(xs ...Middleware) Middleware {
+	return func(next http.Handler) http.Handler {
+		for i := len(xs) - 1; i >= 0; i-- {
+			x := xs[i]
+			next = x(next)
+		}
+		return next
+	}
+}
+
+func (w *wrappedWriter) WriteHeader(statusCode int) {
+	w.ResponseWriter.WriteHeader(statusCode)
+	w.statusCode = statusCode
+}
+
 func logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		next.ServeHTTP(w, r)
-		log.Println(r.Method, r.URL.Path, time.Since(start))
+		wrapped := &wrappedWriter{
+			ResponseWriter: w,
+			statusCode:     http.StatusOK,
+		}
+		next.ServeHTTP(wrapped, r)
+		log.Println(wrapped.statusCode, r.Method, r.URL.Path, time.Since(start))
 	})
 }
 
@@ -34,9 +60,11 @@ func main() {
 	addr := fmt.Sprintf(":%v", portString)
 	r := mainRouter()
 
+	stackOfMiddlewares := CreateStack(logging)
+
 	server := http.Server{
 		Addr:    addr,
-		Handler: logging(r),
+		Handler: stackOfMiddlewares(r),
 	}
 
 	serverError := server.ListenAndServe()
