@@ -3,23 +3,21 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 
+	"github.com/caarlos0/env/v10"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-// type GormDB struct {
-// 	DB *gorm.DB
-// }
-
-// func (d *gorm.DB) Init() {
-// 	d.DB, err := Database()
-// 	if err != nil {
-// 		log.Fatal("failed to initialise db")
-// 	}
-// }
+type config struct {
+	Port        string `env:"PORT"`
+	DB_PASSWORD string `env:"DB_PASSWORD"`
+	DB_NAME     string `env:"DB_NAME"`
+	DB_HOST     string `env:"DB_HOST"`
+	DB_USER     string `env:"DB_USER"`
+	DB_PORT     string `env:"DB_PORT"`
+}
 
 func Database() (*gorm.DB, error) {
 
@@ -28,22 +26,22 @@ func Database() (*gorm.DB, error) {
 		log.Fatal("couldn't load env")
 	}
 
-	var (
-		DB_PASSWORD = os.Getenv("DB_PASSWORD")
-		DB_USER     = os.Getenv("DB_USER")
-		DB_NAME     = os.Getenv("DB_NAME")
-		DB_PORT     = os.Getenv("DB_PORT")
-		DB_HOST     = os.Getenv("DB_HOST")
-	)
+	cfg := config{}
+	if err := env.Parse(&cfg); err != nil {
+		log.Fatal("couldn't parse ENV")
+	}
+
+	// fmt.Printf("%+v\n", cfg)
+	// fmt.Println("ENV parsed")
 
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN: fmt.Sprintf(
 			"host=%v user=%v password=%v dbname=%v port=%v sslmode=disable TimeZone=Asia/Mumbai",
-			DB_HOST,
-			DB_USER,
-			DB_PASSWORD,
-			DB_NAME,
-			DB_PORT,
+			cfg.DB_HOST,
+			cfg.DB_USER,
+			cfg.DB_PASSWORD,
+			cfg.DB_NAME,
+			cfg.DB_PORT,
 		),
 		PreferSimpleProtocol: true, // disables implicit prepared statement usage
 	}), &gorm.Config{})

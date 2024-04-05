@@ -6,9 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 )
 
@@ -35,7 +32,7 @@ func main() {
 
 func mainRouter() http.Handler {
 
-	router := chi.NewRouter()
+	router := http.NewServeMux()
 
 	_, err := Database()
 	if err != nil {
@@ -43,34 +40,34 @@ func mainRouter() http.Handler {
 	}
 	fmt.Println("connected to DB")
 
-	router.Use(middleware.Logger)
-	router.Use(middleware.Recoverer)
-	router.Use(middleware.Heartbeat("/ping"))
-	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://*", "http://*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: false,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
-	}))
+	// router.Use(middleware.Logger)
+	// router.Use(middleware.Recoverer)
+	// router.Use(middleware.Heartbeat("/ping"))
+	// router.Use(cors.Handler(cors.Options{
+	// 	AllowedOrigins:   []string{"https://*", "http://*"},
+	// 	AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+	// 	AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+	// 	ExposedHeaders:   []string{"Link"},
+	// 	AllowCredentials: false,
+	// 	MaxAge:           300, // Maximum value not ignored by any of major browsers
+	// }))
 
 	// Public Routes
-	router.Group(func(r chi.Router) {
+	// router.Group(func(r chi.Router) {
+	//
+	// 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	// 		respondWithJson(w, 200, Message{
+	// 			Message: "Welcome to a simple HTTP server; use GET /info for more info",
+	// 		},
+	// 		)
+	// 	})
 
-		router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			respondWithJson(w, 200, Message{
-				Message: "Welcome to a simple HTTP server; use GET /info for more info",
-			},
-			)
-		})
+	router.HandleFunc("POST /users", CreateUserHandler)
+	router.HandleFunc("GET /users", GetUsersHandler)
+	router.HandleFunc("GET /users/{id}", GetUserWithIdHandler)
+	router.HandleFunc("DELETE /users/{id}", DeleteUserWithIdHandler)
 
-		router.Post("/users", CreateUserHandler)
-		router.Get("/users", GetUsersHandler)
-		router.Get("/users/{id}", GetUserWithIdHandler)
-		router.Delete("/users/{id}", DeleteUserWithIdHandler)
-
-	})
+	// })
 
 	return router
 }

@@ -4,10 +4,8 @@ go 1.22.1
 
 require github.com/joho/godotenv v1.5.1
 
-require github.com/go-chi/chi/v5 v5.0.12
-
 require (
-	github.com/go-chi/cors v1.2.1
+	github.com/caarlos0/env/v10 v10.0.0
 	gorm.io/driver/postgres v1.5.7
 	gorm.io/gorm v1.25.9
 )

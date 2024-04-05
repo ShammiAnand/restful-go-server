@@ -9,7 +9,6 @@ import (
 )
 
 func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
-
 	decoder := json.NewDecoder(r.Body)
 	payload := UserParams{}
 	err := decoder.Decode(&payload)
@@ -39,7 +38,6 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUserWithIdHandler(w http.ResponseWriter, r *http.Request) {
-
 	userId, conversionError := strconv.Atoi(r.PathValue("id"))
 	if conversionError != nil {
 		respondWithError(w, 403, fmt.Sprintf("id should be a positive integer: %v", conversionError))
@@ -63,7 +61,6 @@ func GetUserWithIdHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
-
 	db, err := Database()
 	if err != nil {
 		log.Fatal("error while connecting to db")
@@ -81,7 +78,6 @@ func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteUserWithIdHandler(w http.ResponseWriter, r *http.Request) {
-
 	userId, conversionError := strconv.Atoi(r.PathValue("id"))
 	if conversionError != nil {
 		respondWithError(w, 403, fmt.Sprintf("id should be a positive integer: %v", conversionError))
