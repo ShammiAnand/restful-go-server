@@ -5,9 +5,18 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 )
+
+func logging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		next.ServeHTTP(w, r)
+		log.Println(r.Method, r.URL.Path, time.Since(start))
+	})
+}
 
 func main() {
 
@@ -23,7 +32,8 @@ func main() {
 	fmt.Println("starting at PORT:", portString)
 
 	addr := fmt.Sprintf(":%v", portString)
-	serverError := http.ListenAndServe(addr, mainRouter())
+	r := mainRouter()
+	serverError := http.ListenAndServe(addr, logging(r))
 
 	if serverError != nil {
 		log.Fatal(serverError)
@@ -40,34 +50,10 @@ func mainRouter() http.Handler {
 	}
 	fmt.Println("connected to DB")
 
-	// router.Use(middleware.Logger)
-	// router.Use(middleware.Recoverer)
-	// router.Use(middleware.Heartbeat("/ping"))
-	// router.Use(cors.Handler(cors.Options{
-	// 	AllowedOrigins:   []string{"https://*", "http://*"},
-	// 	AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-	// 	AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-	// 	ExposedHeaders:   []string{"Link"},
-	// 	AllowCredentials: false,
-	// 	MaxAge:           300, // Maximum value not ignored by any of major browsers
-	// }))
-
-	// Public Routes
-	// router.Group(func(r chi.Router) {
-	//
-	// 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-	// 		respondWithJson(w, 200, Message{
-	// 			Message: "Welcome to a simple HTTP server; use GET /info for more info",
-	// 		},
-	// 		)
-	// 	})
-
 	router.HandleFunc("POST /users", CreateUserHandler)
 	router.HandleFunc("GET /users", GetUsersHandler)
 	router.HandleFunc("GET /users/{id}", GetUserWithIdHandler)
 	router.HandleFunc("DELETE /users/{id}", DeleteUserWithIdHandler)
-
-	// })
 
 	return router
 }

@@ -31,9 +31,6 @@ func Database() (*gorm.DB, error) {
 		log.Fatal("couldn't parse ENV")
 	}
 
-	// fmt.Printf("%+v\n", cfg)
-	// fmt.Println("ENV parsed")
-
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN: fmt.Sprintf(
 			"host=%v user=%v password=%v dbname=%v port=%v sslmode=disable TimeZone=Asia/Mumbai",
