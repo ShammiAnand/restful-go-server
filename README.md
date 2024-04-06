@@ -1,1 +1,1 @@
-# RESTful CRUD API Service in Go using chi/v5 
+# RESTful CRUD API Service in Go using net/http and GORM
