@@ -1,4 +1,4 @@
-module gitlab.com/shammianand/rssagg
+module github.com/shammianand/restful-go-server
 
 go 1.22.1
 
