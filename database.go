@@ -4,31 +4,20 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/caarlos0/env/v10"
-	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-type config struct {
-	Port        string `env:"PORT"`
-	DB_PASSWORD string `env:"DB_PASSWORD"`
-	DB_NAME     string `env:"DB_NAME"`
-	DB_HOST     string `env:"DB_HOST"`
-	DB_USER     string `env:"DB_USER"`
-	DB_PORT     string `env:"DB_PORT"`
+type DbDriver struct {
+	db *gorm.DB
 }
 
-func Database() (*gorm.DB, error) {
+func (d *DbDriver) Database() error {
 
-	loadEnvError := godotenv.Load(".env")
-	if loadEnvError != nil {
-		log.Fatal("couldn't load env")
-	}
-
-	cfg := config{}
-	if err := env.Parse(&cfg); err != nil {
-		log.Fatal("couldn't parse ENV")
+	cfg := &Config{}
+	envError := cfg.ReadEnv()
+	if envError != nil {
+		log.Fatal(envError)
 	}
 
 	db, err := gorm.Open(postgres.New(postgres.Config{
@@ -43,10 +32,15 @@ func Database() (*gorm.DB, error) {
 		PreferSimpleProtocol: true, // disables implicit prepared statement usage
 	}), &gorm.Config{})
 
-	migrationErr := db.AutoMigrate(&User{})
-	if migrationErr != nil {
-		log.Fatal("failed MIGRATION")
+	if err != nil {
+		return err
 	}
 
-	return db, err
+	migrationErr := db.AutoMigrate(&User{})
+	if migrationErr != nil {
+		return err
+	}
+
+	d.db = db
+	return nil
 }

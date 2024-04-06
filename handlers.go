@@ -11,8 +11,7 @@ import (
 func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	payload := UserParams{}
-	err := decoder.Decode(&payload)
-	if err != nil {
+	if err := decoder.Decode(&payload); err != nil {
 		respondWithError(w, 403, fmt.Sprintf("Error Parsing JSON: %v", err))
 		return
 	}
@@ -24,11 +23,12 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		JobTitle: payload.JobTitle,
 	}
 
-	db, err := Database()
-	if err != nil {
+	driver := &DbDriver{}
+	if err := driver.Database(); err != nil {
 		log.Fatal("error while connecting to db")
 	}
-	result := db.Create(&newUser)
+
+	result := driver.db.Create(&newUser)
 
 	if result.Error != nil {
 		respondWithError(w, 403, fmt.Sprintf("failed to create: %v", result.Error))
@@ -44,13 +44,13 @@ func GetUserWithIdHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db, err := Database()
-	if err != nil {
+	driver := &DbDriver{}
+	if err := driver.Database(); err != nil {
 		log.Fatal("error while connecting to db")
 	}
 
 	user := User{ID: uint(userId)}
-	result := db.Find(&user)
+	result := driver.db.Find(&user)
 
 	if result.Error != nil {
 		respondWithError(w, 403, fmt.Sprintf("failed to get users: %v", result.Error))
@@ -61,13 +61,13 @@ func GetUserWithIdHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUsersHandler(w http.ResponseWriter, r *http.Request) {
-	db, err := Database()
-	if err != nil {
+	driver := &DbDriver{}
+	if err := driver.Database(); err != nil {
 		log.Fatal("error while connecting to db")
 	}
 
 	users := []User{}
-	result := db.Find(&users)
+	result := driver.db.Find(&users)
 
 	if result.Error != nil {
 		respondWithError(w, 403, fmt.Sprintf("failed to get users: %v", result.Error))
@@ -84,13 +84,13 @@ func DeleteUserWithIdHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db, err := Database()
-	if err != nil {
+	driver := &DbDriver{}
+	if err := driver.Database(); err != nil {
 		log.Fatal("error while connecting to db")
 	}
 
 	user := User{ID: uint(userId)}
-	result := db.Delete(&user)
+	result := driver.db.Delete(&user)
 
 	if result.Error != nil {
 		respondWithError(w, 403, fmt.Sprintf("failed to delete user: %v", result.Error))
